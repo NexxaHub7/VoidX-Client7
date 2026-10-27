@@ -1,0 +1,56 @@
+name: Build VoidX Client
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Instalar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.2.0"
+
+      - name: Descomprimir proyecto
+        run: |
+          unzip -o "VoidX-Client-GUI-0.1.0-key1.zip" -d project
+
+      - name: Encontrar proyecto
+        run: |
+          echo "Contenido del proyecto:"
+          find project -maxdepth 5 -type f | sort
+
+          echo ""
+          echo "Build files:"
+          find project \
+            -name "build.gradle" \
+            -o -name "build.gradle.kts"
+
+      - name: Compilar VoidX Client
+        run: |
+          PROJECT_DIR=$(dirname "$(find project -name build.gradle -print -quit)")
+
+          echo "Proyecto encontrado en: $PROJECT_DIR"
+
+          cd "$PROJECT_DIR"
+
+          gradle build
+
+      - name: Subir JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: VoidX-Client-JAR
+          path: project/**/build/libs/*.jar
+          if-no-files-found: error
